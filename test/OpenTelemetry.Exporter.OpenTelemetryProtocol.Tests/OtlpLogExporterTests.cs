@@ -658,8 +658,15 @@ public class OtlpLogExporterTests : Http2UnencryptedSupportTests
             });
         });
 
-        var logger = loggerFactory.CreateLogger("OtlpLogExporterTests");
-        logger.LogInformation(new Exception("Exception Message"), "Exception Occurred");
+        try
+        {
+            throw new Exception("Exception Message");
+        }
+        catch (Exception e)
+        {
+            var logger = loggerFactory.CreateLogger("OtlpLogExporterTests");
+            logger.LogInformation(e, "Exception Occurred");
+        }
 
         var logRecord = logRecords[0];
         var loggedException = logRecord.Exception;
@@ -670,6 +677,7 @@ public class OtlpLogExporterTests : Http2UnencryptedSupportTests
 
         Assert.NotNull(otlpLogRecord);
         var otlpLogRecordAttributes = otlpLogRecord.Attributes.ToString();
+        var exceptionString = logRecord.Exception.ToInvariantString();
 
         Assert.Contains(SemanticConventions.AttributeExceptionType, otlpLogRecordAttributes);
         Assert.Contains(logRecord.Exception.GetType().Name, otlpLogRecordAttributes);
